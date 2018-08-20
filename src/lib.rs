@@ -983,7 +983,7 @@ use std::string::String;
 
 #[cfg(feature = "std")]
 trait AsDecimal {
-    fn as_decimal(&self, usize) -> String;
+    fn as_decimal(&self, usize) -> Option<String>;
 }
 
 // String conversions
@@ -1013,9 +1013,9 @@ impl<T> AsDecimal for Ratio<T> where
         + std::string::ToString,
 {
     /// Generates decimal approximation to a specified precision as a String.
-    fn as_decimal(&self, precision: usize) -> String {
+    fn as_decimal(&self, precision: usize) -> Option<String> {
         if self.denom.is_one() {
-            self.numer.to_string()
+            Some(self.numer.to_string())
         } else {
             let _10_pow_prec = T::from_usize(10).unwrap().pow(precision);
             let rounded = (self.clone() * &_10_pow_prec).round();
@@ -1023,21 +1023,21 @@ impl<T> AsDecimal for Ratio<T> where
             let trunc = &((&rounded / &_10_pow_prec).trunc().to_integer());
             let tail = &(rounded % _10_pow_prec).abs().to_integer();
             if tail.is_zero() {
-                trunc.to_string()
+                Some(trunc.to_string())
             } else {
                 let mut ret_val = String::from(if minus { "-" } else { "" });
                 ret_val.push_str(&trunc.to_string());
                 ret_val.push_str(".");
                 let tail_strarr = &tail.to_string();
                 let tail_length = &tail_strarr.chars().count();
-                let tail_zeroes = if tail_length < &precision {
+                let tail_zeroes = if *tail_length < precision {
                     // If rust >= 1.16.0 - we can simply use repeat.
                     // "0".repeat(precision - tail_length)
                     (0..(precision - tail_length)).map(|_| "0").collect::<String>()
                 } else { String::from("") };
                 ret_val.push_str(&tail_zeroes);
                 ret_val.push_str(&tail.to_string());
-                ret_val
+                Some(ret_val)
             }
         }
     }
@@ -1604,15 +1604,15 @@ mod test {
     fn test_as_decimal() {
         use AsDecimal;
         use std::string::ToString;
-        assert_eq!(_2.as_decimal(2), "2".to_string());
-        assert_eq!(_1_2.as_decimal(2), "0.50".to_string());
-        assert_eq!(_3_2.as_decimal(1), "1.5".to_string());
-        assert_eq!(_NEG1_2.as_decimal(2), "-0.50".to_string());
-        assert_eq!(_NEG2_3.as_decimal(3), "-0.667".to_string());
-        assert_eq!(_1_8.as_decimal(2), "0.13".to_string());
-        assert_eq!(_NEG1_8.as_decimal(4), "-0.1250".to_string());
-        assert_eq!(_99999_1000.as_decimal(3), "99.999".to_string());
-        assert_eq!(_NEG99999_1000.as_decimal(1), "-100".to_string());
+        assert_eq!(_2.as_decimal(2).unwrap(), "2".to_string());
+        assert_eq!(_1_2.as_decimal(2).unwrap(), "0.50".to_string());
+        assert_eq!(_3_2.as_decimal(1).unwrap(), "1.5".to_string());
+        assert_eq!(_NEG1_2.as_decimal(2).unwrap(), "-0.50".to_string());
+        assert_eq!(_NEG2_3.as_decimal(3).unwrap(), "-0.667".to_string());
+        assert_eq!(_1_8.as_decimal(2).unwrap(), "0.13".to_string());
+        assert_eq!(_NEG1_8.as_decimal(4).unwrap(), "-0.1250".to_string());
+        assert_eq!(_99999_1000.as_decimal(3).unwrap(), "99.999".to_string());
+        assert_eq!(_NEG99999_1000.as_decimal(1).unwrap(), "-100".to_string());
     }
 
     mod arith {
