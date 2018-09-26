@@ -90,8 +90,8 @@ impl<T: Clone + Integer> Ratio<T> {
     #[inline]
     pub fn new_raw(numer: T, denom: T) -> Ratio<T> {
         Ratio {
-            numer: numer,
-            denom: denom,
+            numer,
+            denom,
         }
     }
 
@@ -103,7 +103,7 @@ impl<T: Clone + Integer> Ratio<T> {
 
     /// Gets an immutable reference to the numerator.
     #[inline]
-    pub fn numer<'a>(&'a self) -> &'a T {
+    pub fn numer(&self) -> &T {
         &self.numer
     }
 
@@ -336,7 +336,7 @@ impl Ratio<BigInt> {
             Some(Ratio::new(BigInt::from_biguint(bigint_sign, numer), denom))
         } else {
             let mut numer: BigUint = FromPrimitive::from_u64(mantissa).unwrap();
-            numer = numer << (exponent as usize);
+            numer <<= exponent as usize;
             Some(Ratio::from_integer(BigInt::from_biguint(
                 bigint_sign,
                 numer,
@@ -999,6 +999,14 @@ where
             write!(f, "{}/{}", self.numer, self.denom)
         }
     }
+    /// Renders as decimal representation with specified precision(default to 10).
+    // fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    //     if self.denom.is_one() {
+    //         write!(f, "{}", self.numer)
+    //     } else {
+    //         write!(f, "{}/{}", self.numer, self.denom)
+    //     }
+    // }
 }
 
 #[cfg(feature = "std")]
@@ -1042,6 +1050,13 @@ impl<T> AsDecimal for Ratio<T> where
         }
     }
 }
+// format!(
+//     "{}{}.{:0width$}",
+//     (if minus { "-" } else { "" }),
+//     trunc,
+//     tail,
+//     width = precision
+// )
 
 impl<T: FromStr + Clone + Integer> FromStr for Ratio<T> {
     type Err = ParseRatioError;
@@ -1140,8 +1155,8 @@ impl Error for ParseRatioError {
 }
 
 impl RatioErrorKind {
-    fn description(&self) -> &'static str {
-        match *self {
+    fn description(self) -> &'static str {
+        match self {
             RatioErrorKind::ParseError => "failed to parse integer",
             RatioErrorKind::ZeroDenominator => "zero value denominator",
         }
