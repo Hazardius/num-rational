@@ -17,6 +17,10 @@
 #![doc(html_root_url = "https://docs.rs/num-rational/0.2")]
 #![no_std]
 
+#![cfg_attr(feature = "cargo-clippy", feature(tool_lints))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::suspicious_arithmetic_impl))]
+#![cfg_attr(feature = "cargo-clippy", allow(clippy::suspicious_op_assign_impl))]
+
 #[cfg(feature = "bigint")]
 extern crate num_bigint as bigint;
 #[cfg(feature = "serde")]
@@ -999,7 +1003,7 @@ where
             write!(f, "{}/{}", self.numer, self.denom)
         }
     }
-    /// Renders as decimal representation with specified precision(default to 10).
+    // Renders as decimal representation with specified precision(default to 10).
     // fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     //     if self.denom.is_one() {
     //         write!(f, "{}", self.numer)
